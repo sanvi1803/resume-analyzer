@@ -1,0 +1,15 @@
+{
+    "name": "resume-analyzer",
+    "version": "1.0.0",
+    "description": "AI-powered Resume Analyzer with dual analysis modes",
+    "private": true,
+    "workspaces": [
+        "frontend",
+        "backend"
+    ],
+    "scripts": {
+        "dev": "npm run dev --workspaces",
+        "build": "npm run build --workspaces",
+        "install-all": "npm install && npm install --workspace=frontend && npm install --workspace=backend"
+    }
+}
