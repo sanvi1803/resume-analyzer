@@ -202,7 +202,7 @@ export default function JDMatcher({ onBack }) {
 
           <button
             type="submit"
-            className="btn btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn btn-primary bg-gray-500 hover:bg-gray-600 w-full disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!file || !jobDescription.trim() || loading}
           >
             {loading ? (

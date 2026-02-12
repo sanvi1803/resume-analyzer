@@ -56,11 +56,12 @@ export default function ResumeQualityAnalyzer({ onBack }) {
           Authorization: `Bearer ${token}`,
         },
       });
+      console.log("Analysis response:", response.data);
 
       setAnalysis(response.data.analysis);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Analysis failed. Please try again."
+        err.response?.data?.message || "Analysis failed. Please try again.",
       );
       console.error(err);
     } finally {
@@ -71,15 +72,27 @@ export default function ResumeQualityAnalyzer({ onBack }) {
   if (analysis) {
     return (
       <div className="max-w-6xl mx-auto px-5">
-        <button
-          onClick={() => {
-            onBack();
-            setAnalysis(null);
-          }}
-          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6 font-medium"
-        >
-          <FiChevronLeft /> Back to Mode Selection
-        </button>
+        <div className="flex gap-4 mb-6">
+          <button
+            onClick={() => {
+              onBack();
+              setAnalysis(null);
+            }}
+            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 font-medium"
+          >
+            <FiChevronLeft /> Back to Mode Selection
+          </button>
+          <button
+            onClick={() => {
+              setAnalysis(null);
+              setFile(null);
+              setError("");
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium transition-colors"
+          >
+            ↻ Reset and Try Again
+          </button>
+        </div>
 
         <div>
           <h2 className="text-3xl font-bold mb-6">Resume Quality Analysis</h2>
@@ -134,7 +147,7 @@ export default function ResumeQualityAnalyzer({ onBack }) {
     <div className="max-w-6xl mx-auto px-5">
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6 font-medium"
+        className="flex items-center gap-2 text-gray-700 hover:text-gray-900 mb-6 font-medium"
       >
         <FiChevronLeft /> Back to Mode Selection
       </button>
@@ -180,7 +193,7 @@ export default function ResumeQualityAnalyzer({ onBack }) {
 
           <button
             type="submit"
-            className="btn btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn btn-primary bg-gray-500 hover:bg-gray-600 w-full disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!file || loading}
           >
             {loading ? (

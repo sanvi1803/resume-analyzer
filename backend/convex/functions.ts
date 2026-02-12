@@ -5,16 +5,24 @@ import { v } from "convex/values";
 
 export const createOrUpdateUser = mutation({
   args: {
-    clerkId: v.string(),
     email: v.string(),
     name: v.string(),
     profileImage: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Get the authenticated user identity from Clerk JWT
+    const identity = await ctx.auth.getUserIdentity();
+    if (identity === null) {
+      throw new Error("Not authenticated");
+    }
+
+    // Use the subject from JWT (Clerk user ID)
+    const clerkId = identity.subject;
+
     // Check if user exists
     const existingUser = await ctx.db
       .query("users")
-      .withIndex("by_clerkId", (q) => q.eq("clerkId", args.clerkId))
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", clerkId))
       .first();
 
     if (existingUser) {
@@ -30,7 +38,7 @@ export const createOrUpdateUser = mutation({
 
     // Create new user
     const userId = await ctx.db.insert("users", {
-      clerkId: args.clerkId,
+      clerkId,
       email: args.email,
       name: args.name,
       profileImage: args.profileImage,
@@ -47,6 +55,23 @@ export const createOrUpdateUser = mutation({
     });
 
     return userId;
+  },
+});
+
+export const getCurrentUser = query({
+  args: {},
+  handler: async (ctx) => {
+    // Get the authenticated user identity from Clerk JWT
+    const identity = await ctx.auth.getUserIdentity();
+    if (identity === null) {
+      return null;
+    }
+
+    // Fetch user from database using Clerk ID
+    return await ctx.db
+      .query("users")
+      .withIndex("by_clerkId", (q) => q.eq("clerkId", identity.subject))
+      .first();
   },
 });
 
@@ -69,14 +94,40 @@ export const uploadResume = mutation({
     originalFileName: v.string(),
     fileContent: v.string(),
     fileSize: v.number(),
+    error: v.optional(v.string()),
     metadata: v.object({
+      error: v.optional(v.string()),
+      raw: v.optional(v.string()),
       name: v.optional(v.string()),
       email: v.optional(v.string()),
       phone: v.optional(v.string()),
       skills: v.optional(v.array(v.string())),
+      certifications: v.optional(v.array(v.string())),
+      education: v.optional(
+        v.array(
+          v.object({
+            degree: v.string(),
+            school: v.string(),
+            year: v.string(),
+          }),
+        ),
+      ),
+      experience: v.optional(
+        v.array(
+          v.object({
+            company: v.string(),
+            title: v.string(),
+            duration: v.string(),
+            description: v.string(),
+            history: v.optional(v.array(v.string())),
+          }),
+        ),
+      ),
+      summary: v.optional(v.string()),
     }),
   },
   handler: async (ctx, args) => {
+    // console.log("Uploading resume for user:", args.userId);
     return await ctx.db.insert("resumes", {
       userId: args.userId,
       fileName: args.fileName,
@@ -122,7 +173,7 @@ export const saveAnalysisResult = mutation({
     userId: v.id("users"),
     resumeId: v.id("resumes"),
     analysisType: v.union(v.literal("quality"), v.literal("jd-match")),
-    jobDescription: v.optional(v.string()),
+    jobDescription: v.optional(v.any()),
     results: v.object({
       repeated: v.optional(v.any()),
       impact: v.optional(v.any()),
@@ -138,6 +189,7 @@ export const saveAnalysisResult = mutation({
     aiSuggestions: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // console.log("Args", args);
     const analysisId = await ctx.db.insert("analysisResults", {
       userId: args.userId,
       resumeId: args.resumeId,
@@ -258,7 +310,7 @@ export const getDashboardStats = query({
       .collect();
 
     const qualityAnalyses = analyses.filter(
-      (a) => a.analysisType === "quality"
+      (a) => a.analysisType === "quality",
     );
     const matchAnalyses = analyses.filter((a) => a.analysisType === "jd-match");
 
@@ -266,7 +318,7 @@ export const getDashboardStats = query({
       qualityAnalyses.length > 0
         ? qualityAnalyses.reduce(
             (sum, a) => sum + (a.results.overallScore || 0),
-            0
+            0,
           ) / qualityAnalyses.length
         : 0;
 
@@ -274,7 +326,7 @@ export const getDashboardStats = query({
       matchAnalyses.length > 0
         ? matchAnalyses.reduce(
             (sum, a) => sum + (a.results.atsScore?.score || 0),
-            0
+            0,
           ) / matchAnalyses.length
         : 0;
 

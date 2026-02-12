@@ -23,10 +23,35 @@ export default defineSchema({
     uploadedAt: v.number(),
     fileSize: v.number(),
     metadata: v.object({
+      error: v.optional(v.string()),
+      raw: v.optional(v.string()),
       name: v.optional(v.string()),
       email: v.optional(v.string()),
       phone: v.optional(v.string()),
       skills: v.optional(v.array(v.string())),
+      certifications: v.optional(v.array(v.string())),
+      education: v.optional(
+        v.array(
+          v.object({
+            degree: v.string(),
+            school: v.string(),
+            year: v.string(),
+            details: v.optional(v.string()),
+          }),
+        ),
+      ),
+      experience: v.optional(
+        v.array(
+          v.object({
+            company: v.string(),
+            title: v.string(),
+            duration: v.string(),
+            description: v.string(),
+            history: v.optional(v.array(v.string())),
+          }),
+        ),
+      ),
+      summary: v.optional(v.string()),
     }),
   })
     .index("by_userId", ["userId"])
@@ -37,7 +62,7 @@ export default defineSchema({
     userId: v.id("users"),
     resumeId: v.id("resumes"),
     analysisType: v.union(v.literal("quality"), v.literal("jd-match")),
-    jobDescription: v.optional(v.string()), // For JD match analysis
+    jobDescription: v.optional(v.any()), // For JD match analysis
     results: v.object({
       // Quality Analysis
       repeated: v.optional(
@@ -46,8 +71,8 @@ export default defineSchema({
             word: v.string(),
             frequency: v.number(),
             suggestions: v.array(v.string()),
-          })
-        )
+          }),
+        ),
       ),
       impact: v.optional(
         v.object({
@@ -56,24 +81,30 @@ export default defineSchema({
               word: v.string(),
               suggestion: v.string(),
               count: v.number(),
-            })
+              line: v.string(),
+            }),
           ),
-          strong: v.array(v.string()),
-        })
+          strong: v.array(
+            v.object({
+              line: v.string(),
+              strongWord: v.string(),
+            }),
+          ),
+        }),
       ),
       brevity: v.optional(
         v.object({
           score: v.number(),
           totalBullets: v.number(),
           improvements: v.array(v.string()),
-        })
+        }),
       ),
       skills: v.optional(
         v.object({
           detected: v.array(v.string()),
           missing: v.array(v.string()),
           coverage: v.number(),
-        })
+        }),
       ),
       overallScore: v.optional(v.number()),
       // JD Match Analysis
@@ -83,22 +114,22 @@ export default defineSchema({
           keywordMatch: v.number(),
           sectionCompletion: v.number(),
           matchedKeywords: v.array(v.string()),
-        })
+        }),
       ),
       matchedSkills: v.optional(v.array(v.string())),
       keywordGaps: v.optional(
         v.object({
           missing: v.array(v.string()),
           present: v.array(v.string()),
-        })
+        }),
       ),
       targetedSuggestions: v.optional(
         v.array(
           v.object({
             type: v.string(), // 'skill', 'verb', 'metric'
             suggestion: v.string(),
-          })
-        )
+          }),
+        ),
       ),
     }),
     analyzedAt: v.number(),

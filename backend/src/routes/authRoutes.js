@@ -12,7 +12,7 @@ router.post("/sync", verifyClerkToken, async (req, res) => {
     try {
         const { email, name, profileImage } = req.body;
         const clerkId = req.user.clerkId;
-
+        console.log("Syncing user:", clerkId, email, name);
         const userId = await getOrCreateUser(clerkId, email || req.user.email, name || req.user.name, profileImage);
 
         res.json({

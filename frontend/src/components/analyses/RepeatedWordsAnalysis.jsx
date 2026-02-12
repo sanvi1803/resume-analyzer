@@ -23,14 +23,15 @@ export default function RepeatedWordsAnalysis({ data = [] }) {
               <div className="text-sm">
                 <p className="text-gray-600 m-0 mb-2">Try instead:</p>
                 <div className="flex flex-wrap gap-2">
-                  {item.suggestions.map((sugg, i) => (
-                    <span
-                      key={i}
-                      className="inline-block bg-blue-600 text-white px-2 py-1 rounded text-xs"
-                    >
-                      {sugg}
-                    </span>
-                  ))}
+                  {item.suggestions?.length > 0 &&
+                    item.suggestions?.map((sugg, i) => (
+                      <span
+                        key={i}
+                        className="inline-block bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                      >
+                        {sugg}
+                      </span>
+                    ))}
                 </div>
               </div>
             </div>

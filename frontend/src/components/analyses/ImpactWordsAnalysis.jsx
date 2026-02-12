@@ -1,4 +1,9 @@
+import { useEffect } from "react";
+
 export default function ImpactWordsAnalysis({ data = {} }) {
+  useEffect(() => {
+    console.log("ImpactWordsAnalysis data:", data);
+  }, []);
   return (
     <div className="card">
       <h4>Impact Verb Analysis</h4>
@@ -41,8 +46,7 @@ export default function ImpactWordsAnalysis({ data = {} }) {
                 {item.line.substring(0, 50)}...
               </p>
               <p className="text-xs text-blue-600 m-0">
-                Replace "{item.weakWord}" with:{" "}
-                {item.strongAlternatives.join(", ")}
+                Replace "{item.word}" with: {item.suggestion}
               </p>
             </div>
           ))}

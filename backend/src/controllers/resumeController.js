@@ -43,7 +43,8 @@ const analyzeResume = async (req, res) => {
                 req.file.originalname,
                 resumeText,
                 req.file.size,
-                metadata || {}
+                metadata || {},
+                parsed.fileContent
             );
         } catch (error) {
             console.log('Warning: Could not save to Convex:', error.message);
@@ -51,8 +52,8 @@ const analyzeResume = async (req, res) => {
 
         // Perform analysis
         const analysis = {
-            repeated: analyzeRepeatedWords(resumeText),
-            impact: analyzeImpactWords(resumeText),
+            repeated: await analyzeRepeatedWords(resumeText),
+            impact: await analyzeImpactWords(resumeText),
             brevity: calculateBrevityScore(resumeText),
             skills: extractSkills(resumeText)
         };
@@ -65,6 +66,7 @@ const analyzeResume = async (req, res) => {
         if (process.env.OPENROUTER_API_KEY) {
             try {
                 aiInsights = await generateImprovements(resumeText);
+                console.log("AI insights for resume analysis: from an", aiInsights);
             } catch (error) {
                 console.log('AI insights skipped:', error.message);
             }
@@ -73,6 +75,7 @@ const analyzeResume = async (req, res) => {
         // Save analysis to Convex
         try {
             if (resumeId) {
+                console.log("Ai suggestions for resume analysis:", aiInsights);
                 await saveAnalysis(
                     req.user.clerkId,
                     resumeId,
@@ -80,7 +83,7 @@ const analyzeResume = async (req, res) => {
                     analysis,
                     null,
                     !!aiInsights,
-                    aiInsights
+                    aiInsights ? JSON.stringify(aiInsights) : ''
                 );
             }
         } catch (error) {
@@ -152,8 +155,8 @@ const analyzeWithJobDescription = async (req, res) => {
 
         // Also include basic resume analysis
         const basicAnalysis = {
-            repeated: analyzeRepeatedWords(resumeText),
-            impact: analyzeImpactWords(resumeText),
+            repeated: await analyzeRepeatedWords(resumeText),
+            impact: await analyzeImpactWords(resumeText),
             brevity: calculateBrevityScore(resumeText),
             skills: extractSkills(resumeText)
         };
@@ -294,7 +297,7 @@ const deleteAnalysis = async (req, res) => {
     }
 };
 
-export default {
+export {
     analyzeResume,
     analyzeWithJobDescription,
     getAnalysisHistory,

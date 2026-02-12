@@ -32,7 +32,7 @@ export const industrySkills = {
 /**
  * Analyze resume for repeated words
  */
-export const analyzeRepeatedWords = (text, threshold = 4) => {
+export const analyzeRepeatedWords = async (text, threshold = 4) => {
     const words = text.toLowerCase()
         .split(/\s+/)
         .filter(w => w.length > 4); // Filter short words
@@ -42,23 +42,28 @@ export const analyzeRepeatedWords = (text, threshold = 4) => {
         wordFreq[word] = (wordFreq[word] || 0) + 1;
     });
 
-    const repeated = Object.entries(wordFreq)
+    const repeatedEntries = Object.entries(wordFreq)
         .filter(([_, count]) => count >= threshold)
-        .sort((a, b) => b[1] - a[1])
-        .map(([word, count]) => ({
+        .sort((a, b) => b[1] - a[1]);
+
+    // Await all suggestions
+    const repeated = await Promise.all(
+        repeatedEntries.map(async ([word, count]) => ({
             word,
             frequency: count,
-            suggestions: generateSuggestions(word)
-        }));
+            suggestions: await generateSuggestions(word)
+        }))
+    );
 
     return repeated;
 };
 
 /**
- * Generate word replacement suggestions
+ * Generate word replacement suggestions using AI
  */
-const generateSuggestions = (word) => {
-    const suggestions = {
+const generateSuggestions = async (word) => {
+    // Fallback static suggestions
+    const staticSuggestions = {
         'worked': ['led', 'implemented', 'developed', 'architected', 'optimized'],
         'responsible': ['led', 'managed', 'directed', 'oversaw', 'spearheaded'],
         'helped': ['enabled', 'supported', 'facilitated', 'contributed', 'enhanced'],
@@ -70,31 +75,82 @@ const generateSuggestions = (word) => {
         'project': ['initiative', 'program', 'engagement', 'deliverable']
     };
 
-    return suggestions[word.toLowerCase()] || ['Consider using a more specific verb'];
+    // If no API key, use static suggestions
+    if (!process.env.OPENROUTER_API_KEY) {
+        return staticSuggestions[word.toLowerCase()] || ['Consider using a more specific verb'];
+    }
+
+    try {
+        const { callOpenRouter } = await import('./aiService.js');
+        const systemPrompt = `You are an expert resume writer. For the weak word "${word}", suggest 5 strong action verbs as replacements. Return ONLY a JSON array of strings, nothing else.`;
+        const message = await callOpenRouter(systemPrompt, `Suggest strong alternatives for the word "${word}"`);
+        const response = message.content;
+
+        // Parse JSON array from response
+        const jsonMatch = response.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+            const suggestions = JSON.parse(jsonMatch[0]);
+            return Array.isArray(suggestions) ? suggestions : staticSuggestions[word.toLowerCase()] || ['Consider using a more specific verb'];
+        }
+    } catch (error) {
+        console.log('AI suggestion generation failed, using static fallback:', error.message);
+    }
+
+    // Fallback to static suggestions
+    return staticSuggestions[word.toLowerCase()] || ['Consider using a more specific verb'];
 };
 
 /**
  * Analyze impact of action verbs in resume
  */
-export const analyzeImpactWords = (text) => {
+export const analyzeImpactWords = async (text) => {
     const lines = text.split('\n').filter(l => l.trim());
     const analysis = {
         weak: [],
         strong: [],
-        suggestions: []
     };
 
+    // Collect all weak word instances
+    const weakWordInstances = [];
     lines.forEach(line => {
         impactWordDictionary.weak.forEach(weakWord => {
             if (line.toLowerCase().includes(weakWord)) {
-                analysis.weak.push({
-                    line,
-                    weakWord,
-                    strongAlternatives: impactWordDictionary.strong.slice(0, 5)
-                });
+                const count = (line.toLowerCase().match(new RegExp(weakWord, 'g')) || []).length;
+                weakWordInstances.push({ weakWord, line, count });
             }
         });
+    });
 
+    // Get AI suggestions for each weak word with resume context
+    for (const instance of weakWordInstances) {
+        let suggestion = impactWordDictionary.strong[0]; // Default fallback
+
+        if (process.env.OPENROUTER_API_KEY) {
+            try {
+                const { callOpenRouter } = await import('./aiService.js');
+                const systemPrompt = `You are an expert resume writer. Given a weak word found in a resume line, suggest a strong action verb replacement based on the context. Return ONLY a single strong action verb, nothing else.`;
+                const userMessage = `Resume line: "${instance.line}"\n\nWeak word to replace: "${instance.weakWord}"\n\nSuggest a stronger action verb.`;
+                const message = await callOpenRouter(systemPrompt, userMessage);
+                const response = message.content?.trim();
+
+                if (response && response.length > 0 && response.length < 50) {
+                    suggestion = response;
+                }
+            } catch (error) {
+                console.log('AI suggestion for weak word failed, using static fallback:', error.message);
+            }
+        }
+
+        analysis.weak.push({
+            word: instance.weakWord,
+            suggestion,
+            count: instance.count,
+            line: instance.line,
+        });
+    }
+
+    // Analyze strong words
+    lines.forEach(line => {
         impactWordDictionary.strong.forEach(strongWord => {
             if (line.toLowerCase().includes(strongWord)) {
                 analysis.strong.push({

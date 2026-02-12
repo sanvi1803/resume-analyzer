@@ -1,63 +1,47 @@
-import { useState } from "react";
-import { useUser } from "@clerk/clerk-react";
-import Header from "./components/Header";
-import ModeSelector from "./components/ModeSelector";
-import ResumeQualityAnalyzer from "./components/ResumeQualityAnalyzer";
-import JDMatcher from "./components/JDMatcher";
-import Dashboard from "./components/Dashboard";
+import { Routes, Route } from "react-router-dom";
+import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
+import { FiLoader } from "react-icons/fi";
+import HomePage from "./components/HomePage";
+import QualityAnalysisPage from "./pages/QualityAnalysisPage";
+import JDMatchPage from "./pages/JDMatchPage";
+import DashboardPage from "./pages/DashboardPage";
+import ModeSelectorPage from "./pages/ModeSelectorPage";
+import { useInitializeUser } from "./hooks/useInitializeUser";
 
 function App() {
-  const { isSignedIn, isLoaded } = useUser();
-  const [mode, setMode] = useState(null); // 'quality', 'jd-match', or 'dashboard'
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        Loading...
-      </div>
-    );
-  }
-
-  if (!isSignedIn) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Header />
-        <main className="max-w-6xl mx-auto px-4 py-12">
-          <div className="text-center py-12">
-            <h2 className="text-3xl font-bold mb-2">
-              Welcome to Resume Analyzer
-            </h2>
-            <p className="text-gray-600 mb-8">
-              Sign in to analyze your resume and track your progress
-            </p>
-            <div className="text-gray-700 space-y-2">
-              <p>✓ Analyze resume quality</p>
-              <p>✓ Match against job descriptions</p>
-              <p>✓ Get AI-powered suggestions</p>
-              <p>✓ Track analysis history</p>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
+  // Sync Clerk user to Convex database on authentication
+  useInitializeUser();
   return (
-    <div className="min-h-screen bg-white">
-      <Header />
+    <>
+      <AuthLoading>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <FiLoader
+              size={48}
+              className="animate-spin text-blue-600 mx-auto mb-4"
+            />
+            <p className="text-xl text-gray-700">Loading...</p>
+          </div>
+        </div>
+      </AuthLoading>
 
-      <main className="max-w-6xl mx-auto px-4 py-6">
-        {!mode && <ModeSelector setMode={setMode} />}
+      <Unauthenticated>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/analyse" element={<HomePage />} />
+        </Routes>
+      </Unauthenticated>
 
-        {mode === "quality" && (
-          <ResumeQualityAnalyzer onBack={() => setMode(null)} />
-        )}
-
-        {mode === "jd-match" && <JDMatcher onBack={() => setMode(null)} />}
-
-        {mode === "dashboard" && <Dashboard />}
-      </main>
-    </div>
+      <Authenticated>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/analyse" element={<ModeSelectorPage />} />
+          <Route path="/analyse/quality" element={<QualityAnalysisPage />} />
+          <Route path="/analyse/jd-match" element={<JDMatchPage />} />
+          <Route path="/analyse/dashboard" element={<DashboardPage />} />
+        </Routes>
+      </Authenticated>
+    </>
   );
 }
 

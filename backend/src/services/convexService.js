@@ -38,23 +38,50 @@ export const getOrCreateUser = async (clerkId, email, name, profileImage) => {
 };
 
 /**
+ * Get Convex user ID from Clerk ID
+ * Queries the users table by clerkId index
+ */
+export const getUserIdByClerkId = async (clerkId) => {
+    try {
+        const user = await convex.query("functions:getUserByClerkId", { clerkId });
+        if (!user) {
+            throw new Error(`User not found for Clerk ID: ${clerkId}`);
+        }
+        return user._id;
+    } catch (error) {
+        console.error("Error getting user by Clerk ID:", error);
+        throw error;
+    }
+};
+
+/**
  * Save resume to Convex
  * Called from: POST /api/resume/analyze
+ * Note: userId parameter can be either Clerk ID (string) or Convex ID
+ * If it's a Clerk ID, we'll look up the actual Convex ID
  */
-export const saveResume = async (userId, fileName, originalFileName, fileContent, fileSize, metadata) => {
+export const saveResume = async (userId, fileName, originalFileName, fileContent, fileSize, metadata, userIsClerkId = true) => {
     try {
+        // If userId is a Clerk ID, look up the actual Convex user ID
+        let convexUserId = userId;
+        if (userIsClerkId && userId.startsWith('user_')) {
+            convexUserId = await getUserIdByClerkId(userId);
+        }
+
         const result = await convex.mutation("functions:uploadResume", {
-            userId,
+            userId: convexUserId,
             fileName,
             originalFileName,
+            fileContent,
             fileSize,
             metadata: metadata || {},
         });
 
-        console.log("Resume saved to Convex:", { userId, fileName, fileSize });
+        // console.log("Resume saved to Convex:", { userId: convexUserId, fileName, fileSize });
         return result;
     } catch (error) {
-        console.error("Error saving resume:", error);
+        // console.error("Error saving resume:", error?.Error, error?.message);
+
         throw error;
     }
 };
@@ -62,6 +89,7 @@ export const saveResume = async (userId, fileName, originalFileName, fileContent
 /**
  * Save analysis result to Convex
  * Called from: POST /api/resume/analyze or /api/resume/analyze-with-jd
+ * Note: userId can be either Clerk ID (string) or Convex ID
  */
 export const saveAnalysis = async (
     userId,
@@ -70,11 +98,18 @@ export const saveAnalysis = async (
     results,
     jobDescription = null,
     aiEnhanced = false,
-    aiSuggestions = null
+    aiSuggestions = null,
+    userIsClerkId = true
 ) => {
     try {
+        // If userId is a Clerk ID, look up the actual Convex user ID
+        let convexUserId = userId;
+        if (userIsClerkId && userId.startsWith('user_')) {
+            convexUserId = await getUserIdByClerkId(userId);
+        }
+
         const result = await convex.mutation("functions:saveAnalysisResult", {
-            userId,
+            userId: convexUserId,
             resumeId,
             analysisType,
             results,
@@ -83,7 +118,7 @@ export const saveAnalysis = async (
             aiSuggestions,
         });
 
-        console.log("Analysis saved to Convex:", { userId, resumeId, analysisType });
+        // console.log("Analysis saved to Convex:", { userId: convexUserId, resumeId, analysisType });
         return result;
     } catch (error) {
         console.error("Error saving analysis:", error);
@@ -95,11 +130,17 @@ export const saveAnalysis = async (
  * Get user's analysis history
  * Called from: GET /api/resume/history
  */
-export const getAnalysisHistory = async (userId) => {
+export const getAnalysisHistory = async (userId, userIsClerkId = true) => {
     try {
-        const result = await convex.query("functions:getAnalysisHistory", { userId });
+        // If userId is a Clerk ID, look up the actual Convex user ID
+        let convexUserId = userId;
+        if (userIsClerkId && userId.startsWith('user_')) {
+            convexUserId = await getUserIdByClerkId(userId);
+        }
 
-        console.log("Fetched analysis history for:", userId);
+        const result = await convex.query("functions:getAnalysisHistory", { userId: convexUserId });
+
+        console.log("Fetched analysis history for:", convexUserId);
         return result;
     } catch (error) {
         console.error("Error fetching analysis history:", error);
@@ -111,11 +152,17 @@ export const getAnalysisHistory = async (userId) => {
  * Get user's resumes
  * Called from: Dashboard component
  */
-export const getUserResumes = async (userId) => {
+export const getUserResumes = async (userId, userIsClerkId = true) => {
     try {
-        const result = await convex.query("functions:getUserResumes", { userId });
+        // If userId is a Clerk ID, look up the actual Convex user ID
+        let convexUserId = userId;
+        if (userIsClerkId && userId.startsWith('user_')) {
+            convexUserId = await getUserIdByClerkId(userId);
+        }
 
-        console.log("Fetched resumes for:", userId);
+        const result = await convex.query("functions:getUserResumes", { userId: convexUserId });
+
+        console.log("Fetched resumes for:", convexUserId);
         return result;
     } catch (error) {
         console.error("Error fetching resumes:", error);
@@ -127,15 +174,21 @@ export const getUserResumes = async (userId) => {
  * Log user action to audit logs
  * Called from: Controllers after operations
  */
-export const logAction = async (userId, action, details) => {
+export const logAction = async (userId, action, details, userIsClerkId = true) => {
     try {
+        // If userId is a Clerk ID, look up the actual Convex user ID
+        let convexUserId = userId;
+        if (userIsClerkId && userId.startsWith('user_')) {
+            convexUserId = await getUserIdByClerkId(userId);
+        }
+
         await convex.mutation("functions:logAction", {
-            userId,
+            userId: convexUserId,
             action,
             details,
         });
 
-        console.log("Action logged to Convex:", { userId, action });
+        console.log("Action logged to Convex:", { userId: convexUserId, action });
     } catch (error) {
         console.error("Error logging action:", error);
         // Don't throw - logging failures shouldn't break the app
