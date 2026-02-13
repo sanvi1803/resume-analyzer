@@ -140,7 +140,7 @@ export const getAnalysisHistory = async (userId, userIsClerkId = true) => {
 
         const result = await convex.query("functions:getAnalysisHistory", { userId: convexUserId });
 
-        console.log("Fetched analysis history for:", convexUserId);
+        // console.log("Fetched analysis history for:", result);
         return result;
     } catch (error) {
         console.error("Error fetching analysis history:", error);

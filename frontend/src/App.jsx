@@ -5,6 +5,7 @@ import HomePage from "./components/HomePage";
 import QualityAnalysisPage from "./pages/QualityAnalysisPage";
 import JDMatchPage from "./pages/JDMatchPage";
 import DashboardPage from "./pages/DashboardPage";
+import AnalysisDetailsPage from "./pages/AnalysisDetailsPage";
 import ModeSelectorPage from "./pages/ModeSelectorPage";
 import { useInitializeUser } from "./hooks/useInitializeUser";
 
@@ -39,6 +40,10 @@ function App() {
           <Route path="/analyse/quality" element={<QualityAnalysisPage />} />
           <Route path="/analyse/jd-match" element={<JDMatchPage />} />
           <Route path="/analyse/dashboard" element={<DashboardPage />} />
+          <Route
+            path="/analyse/analysis/:analysisId"
+            element={<AnalysisDetailsPage />}
+          />
         </Routes>
       </Authenticated>
     </>

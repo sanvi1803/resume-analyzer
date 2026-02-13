@@ -37,7 +37,7 @@ export default function ImpactWordsAnalysis({ data = {} }) {
           <p className="text-xs font-semibold text-gray-700 m-0 mb-2">
             Weak Verbs to Replace:
           </p>
-          {data.weak.slice(0, 3).map((item, idx) => (
+          {data.weak.slice(0, 5 ).map((item, idx) => (
             <div
               key={idx}
               className="p-2 bg-gray-50 rounded-lg mb-2 border-l-3 border-red-500"

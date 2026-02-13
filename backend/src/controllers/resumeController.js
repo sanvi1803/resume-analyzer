@@ -51,32 +51,39 @@ const analyzeResume = async (req, res) => {
             console.log('Warning: Could not save to Convex:', error.message);
         }
 
-        // Perform analysis
+        // RUN ALL ANALYSIS IN PARALLEL
+        const [repeated, impact, skills, aiInsights] = await Promise.all([
+            analyzeRepeatedWords(resumeText).catch(err => {
+                console.log('Repeated words analysis failed:', err.message);
+                return [];
+            }),
+            analyzeImpactWords(resumeText).catch(err => {
+                console.log('Impact words analysis failed:', err.message);
+                return { weak: [], strong: [] };
+            }),
+            extractSkills(resumeText),
+            process.env.OPENROUTER_API_KEY
+                ? generateImprovements(resumeText).catch(err => {
+                    console.log('AI insights skipped:', err.message);
+                    return null;
+                })
+                : Promise.resolve(null)
+        ]);
+
+        // Compile analysis
         const analysis = {
-            repeated: await analyzeRepeatedWords(resumeText),
-            impact: await analyzeImpactWords(resumeText),
+            repeated,
+            impact,
             brevity: calculateBrevityScore(resumeText),
-            skills: extractSkills(resumeText)
+            skills
         };
 
         // Calculate overall score
         analysis.overallScore = calculateOverallScore(analysis);
 
-        // Optionally call AI for enhanced insights (if API key exists)
-        let aiInsights = null;
-        if (process.env.OPENROUTER_API_KEY) {
-            try {
-                aiInsights = await generateImprovements(resumeText);
-                console.log("AI insights for resume analysis: from an", aiInsights);
-            } catch (error) {
-                console.log('AI insights skipped:', error.message);
-            }
-        }
-
         // Save analysis to Convex
         try {
             if (resumeId) {
-                console.log("Ai suggestions for resume analysis:", aiInsights);
                 await saveAnalysis(
                     req.user.clerkId,
                     resumeId,
@@ -109,134 +116,6 @@ const analyzeResume = async (req, res) => {
         });
     }
 };
-/**
- * Analyze resume against job description
- */
-// const analyzeWithJobDescription = async (req, res) => {
-//     try {
-//         if (!req.file) {
-//             return res.status(400).json({ error: 'No resume file uploaded' });
-//         }
-
-//         if (!req.body.jobDescription) {
-//             return res.status(400).json({ error: 'Job description is required' });
-//         }
-
-//         if (!req.user || !req.user.clerkId) {
-//             return res.status(401).json({ error: 'Authentication required' });
-//         }
-
-//         // Parse resume file
-//         const parsed = await parseFile(req.file.path, req.file.mimetype);
-//         const resumeText = normalizeResumeText(parsed.text);
-//         const jobDescription = req.body.jobDescription;
-
-//         // RUN ALL AI CALLS IN PARALLEL - This is the key optimization!
-//         const [
-//             metadata,
-//             matchedSkillsResult,
-//             targetedSuggestions,
-//             jdSuggestions,
-//             repeated,
-//             impact
-//         ] = await Promise.all([
-//             extractResumeData(resumeText).catch(() => ({})),
-//             extractMatchedSkills(resumeText, jobDescription).catch(err => {
-//                 console.log('Skill extraction failed:', err.message);
-//                 return { matched: [], missing: [] };
-//             }),
-//             generateTargetedSuggestions(resumeText, jobDescription).catch(err => {
-//                 console.log('Targeted suggestions failed:', err.message);
-//                 return [];
-//             }),
-//             generateJDMatchSuggestions(resumeText, jobDescription).catch(err => {
-//                 console.log('JD match suggestions skipped:', err.message);
-//                 return null;
-//             }),
-//             analyzeRepeatedWords(resumeText).catch(err => {
-//                 console.log('Repeated words analysis failed:', err.message);
-//                 return [];
-//             }),
-//             analyzeImpactWords(resumeText).catch(err => {
-//                 console.log('Impact words analysis failed:', err.message);
-//                 return { weak: [], strong: [] };
-//             })
-//         ]);
-
-//         // Save resume to Convex
-//         let resumeId;
-//         try {
-//             resumeId = await saveResume(
-//                 req.user.clerkId,
-//                 req.file.filename,
-//                 req.file.originalname,
-//                 resumeText,
-//                 req.file.size,
-//                 metadata || {}
-//             );
-//         } catch (error) {
-//             console.log('Warning: Could not save to Convex:', error.message);
-//         }
-
-//         // Perform non-AI ATS analysis (fast, synchronous)
-//         const atsScore = calculateATSScore(resumeText, jobDescription);
-//         const matchedSkills = matchedSkillsResult.matched;
-//         const keywordGaps = findKeywordGaps(resumeText, jobDescription);
-
-//         // Compile basic resume analysis
-//         const basicAnalysis = {
-//             repeated,
-//             impact,
-//             brevity: calculateBrevityScore(resumeText),
-//             skills: extractSkills(resumeText)
-//         };
-
-//         // Save analysis to Convex
-//         try {
-//             if (resumeId) {
-//                 const analysisResults = {
-//                     atsScore,
-//                     matchedSkills,
-//                     keywordGaps,
-//                     targetedSuggestions,
-//                     ...basicAnalysis
-//                 };
-//                 await saveAnalysis(
-//                     req.user.clerkId,
-//                     resumeId,
-//                     'jd-match',
-//                     analysisResults,
-//                     jobDescription,
-//                     !!jdSuggestions,
-//                     jdSuggestions ? JSON.stringify(jdSuggestions) : ''
-//                 );
-//             }
-//         } catch (error) {
-//             console.log('Warning: Could not save analysis to Convex:', error.message);
-//         }
-
-//         // Clean up uploaded file
-//         await fs.unlink(req.file.path).catch(() => { });
-
-//         res.json({
-//             success: true,
-//             analysis: {
-//                 atsScore,
-//                 matchedSkills,
-//                 keywordGaps,
-//                 targetedSuggestions,
-//                 basicAnalysis,
-//                 aiRecommendations: jdSuggestions
-//             }
-//         });
-//     } catch (error) {
-//         console.error('JD matching error:', error);
-//         res.status(500).json({
-//             error: 'Analysis failed',
-//             message: error.message
-//         });
-//     }
-// };
 
 const analyzeWithJobDescription = async (req, res) => {
     try {

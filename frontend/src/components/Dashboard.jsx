@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useAuth, useUser } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const Dashboard = () => {
   const { user, isLoaded } = useUser();
   const { getToken } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [analyses, setAnalyses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +25,7 @@ const Dashboard = () => {
       const historyRes = await axios.get("/api/resume/history", {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log("Dashboard analysis history response:", historyRes.data);
       setAnalyses(historyRes.data.analyses || []);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -60,7 +63,12 @@ const Dashboard = () => {
             {analyses.map((analysis) => (
               <div
                 key={analysis._id}
-                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                onClick={() =>
+                  navigate(`/analyse/analysis/${analysis._id}`, {
+                    state: { analysis },
+                  })
+                }
+                className="cursor-pointer border border-gray-200 rounded-lg p-4 hover:shadow-lg hover:border-blue-300 transition-all"
               >
                 <div className="flex justify-between items-start mb-3">
                   <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded text-sm font-medium">

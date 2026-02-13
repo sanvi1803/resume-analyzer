@@ -1,7 +1,8 @@
 import { FiFileText } from "react-icons/fi";
 import { SignInButton, UserButton } from "@clerk/clerk-react";
 import { useConvexAuth } from "convex/react";
-
+import { Link } from "react-router-dom";
+import { MdDashboard } from "react-icons/md";
 export default function Header() {
   const { isLoading, isAuthenticated } = useConvexAuth();
 
@@ -9,10 +10,12 @@ export default function Header() {
     <header className="bg-gradient-to-r from-gray-700 to-gray-900 text-white py-5 mb-8 shadow-lg">
       <div className="max-w-6xl mx-auto px-3 flex flex-col md:flex-row items-center justify-between gap-5 flex-wrap">
         <div className="flex items-center gap-3">
-          <FiFileText size={28} />
+          <Link to="/" className="text-2xl font-bold">
+            <FiFileText size={28} />
+          </Link>
           <h1 className="text-4xl font-bold">Resume Analyzer</h1>
         </div>
-        <p className="text-base opacity-90 flex-grow text-center md:text-left">
+        <p className="text-base opacity-90 flex-grow text-center md:text-left mt-2">
           AI-Powered Resume Improvement & ATS Matching
         </p>
 
@@ -31,6 +34,12 @@ export default function Header() {
                 Welcome!
               </span>
               <UserButton />
+              <Link
+                to="/analyse/dashboard"
+                className="bg-gray-600 text-white px-2 py-2 rounded font-medium hover:bg-gray-700 transition-colors"
+              >
+                <MdDashboard />
+              </Link>
             </div>
           )}
         </div>
