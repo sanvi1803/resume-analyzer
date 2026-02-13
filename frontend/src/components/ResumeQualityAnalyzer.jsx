@@ -125,13 +125,18 @@ export default function ResumeQualityAnalyzer({ onBack }) {
                     className="border border-gray-200 rounded-lg p-4"
                   >
                     <p className="mb-2">
-                      <strong>Original:</strong> {imp.original}
+                      <strong className="text-gray-800">Original:</strong>
+                      <span className="ml-2 text-gray-600">{imp.original}</span>
                     </p>
                     <p className="mb-2">
-                      <strong>Improved:</strong> {imp.improved}
+                      <strong className="text-green-800">Improved:</strong>
+                      <span className="ml-2 text-green-700">
+                        {imp.improved}
+                      </span>
                     </p>
                     <p>
-                      <strong>Why:</strong> {imp.reason}
+                      <strong className="text-blue-800">Why:</strong>
+                      <span className="ml-2 text-blue-700">{imp.reason}</span>
                     </p>
                   </div>
                 ))}

@@ -37,6 +37,212 @@ export const calculateATSScore = (resumeText, jobDescriptionText) => {
 };
 
 /**
+ * Calculate dynamic ATS score based on industry requirements
+ */
+export const calculateATSScoreJD = (resumeText, jobDescriptionText, matchedSkills = [], keywordGaps = {}, industryRequirements = null) => {
+    const resumeWords = normalizeAndSplit(resumeText);
+    const jobWords = normalizeAndSplit(jobDescriptionText);
+    const resumeLower = resumeText.toLowerCase();
+
+
+    // 1. Basic Keyword Matching (15%)
+    let matchedCount = 0;
+    jobWords.forEach(word => {
+        if (resumeWords.includes(word)) {
+            matchedCount++;
+        }
+    });
+    const keywordMatchScore = (matchedCount / jobWords.length) * 100;
+
+    // 2. Section Completeness (15%)
+    const requiredSections = ['experience', 'education', 'skills'];
+    const optionalSections = ['summary', 'certifications', 'projects', 'achievements'];
+
+    let requiredSectionScore = 0;
+    let optionalSectionScore = 0;
+
+    requiredSections.forEach(section => {
+        if (resumeLower.includes(section)) {
+            requiredSectionScore += 33.33;
+        }
+    });
+
+    optionalSections.forEach(section => {
+        if (resumeLower.includes(section)) {
+            optionalSectionScore += 12.5;
+        }
+    });
+
+    const sectionScore = Math.min(requiredSectionScore + (optionalSectionScore * 0.5), 100);
+
+    // 3. Skills Match (25%) - Using AI-extracted skills
+    const skillMatchScore = matchedSkills && matchedSkills.length > 0
+        ? (matchedSkills.length / (matchedSkills.length + (keywordGaps?.missing?.length || 0))) * 100
+        : 0;
+
+    // 4. Industry-Specific Technical Skills (15%)
+    let technicalSkillScore = 0;
+    let technicalSkillsFound = 0;
+
+    if (industryRequirements && industryRequirements.technicalSkills.length > 0) {
+        industryRequirements.technicalSkills.forEach(skill => {
+            if (resumeLower.includes(skill.toLowerCase())) {
+                technicalSkillsFound++;
+            }
+        });
+        technicalSkillScore = (technicalSkillsFound / industryRequirements.technicalSkills.length) * 100;
+    } else {
+        technicalSkillScore = 50; // Neutral if no data
+    }
+
+    // 5. Industry-Specific Tools & Technologies (10%)
+    let toolScore = 0;
+    let toolsFound = 0;
+
+    if (industryRequirements && industryRequirements.tools.length > 0) {
+        industryRequirements.tools.forEach(tool => {
+            if (resumeLower.includes(tool.toLowerCase())) {
+                toolsFound++;
+            }
+        });
+        toolScore = (toolsFound / industryRequirements.tools.length) * 100;
+    } else {
+        toolScore = 50;
+    }
+
+    // 6. Industry-Relevant Action Verbs (10%)
+    let actionVerbScore = 0;
+    let actionVerbsFound = 0;
+
+    if (industryRequirements && industryRequirements.actionVerbs.length > 0) {
+        industryRequirements.actionVerbs.forEach(verb => {
+            if (resumeLower.includes(verb.toLowerCase())) {
+                actionVerbsFound++;
+            }
+        });
+        actionVerbScore = (actionVerbsFound / industryRequirements.actionVerbs.length) * 100;
+    } else {
+        // Fallback to generic action verbs
+        const genericActionVerbs = [
+            'achieved', 'improved', 'managed', 'created', 'designed',
+            'built', 'implemented', 'developed', 'led', 'optimized'
+        ];
+        actionVerbsFound = genericActionVerbs.filter(verb => resumeLower.includes(verb)).length;
+        actionVerbScore = Math.min((actionVerbsFound / 6) * 100, 100);
+    }
+
+    // 7. Quantifiable Achievements & Metrics (10%)
+    const numberPattern = /\b\d+%|\b\d+\+|\b\d+[kKmM]\+?|\$\d+[kKmMbB]?|\b\d+x\b/g;
+    const numbersFound = (resumeText.match(numberPattern) || []).length;
+
+    // Check for industry-specific metric keywords
+    let metricKeywordsFound = 0;
+    if (industryRequirements && industryRequirements.metricKeywords.length > 0) {
+        industryRequirements.metricKeywords.forEach(keyword => {
+            if (resumeLower.includes(keyword.toLowerCase())) {
+                metricKeywordsFound++;
+            }
+        });
+    }
+
+    const metricsScore = Math.min(
+        ((numbersFound * 10) + (metricKeywordsFound * 20)) / 2,
+        100
+    );
+
+    // 8. Certifications & Qualifications (5%)
+    let certScore = 0;
+    let certsFound = 0;
+
+    if (industryRequirements && industryRequirements.certifications.length > 0) {
+        industryRequirements.certifications.forEach(cert => {
+            if (resumeLower.includes(cert.toLowerCase())) {
+                certsFound++;
+            }
+        });
+        certScore = (certsFound / industryRequirements.certifications.length) * 100;
+    } else {
+        // Check for generic qualification indicators
+        const hasQualifications = resumeLower.includes('bachelor') ||
+            resumeLower.includes('master') ||
+            resumeLower.includes('certified');
+        certScore = hasQualifications ? 75 : 25;
+    }
+
+    // 9. Industry Terminology (5%)
+    let industryTermScore = 0;
+    let termsFound = 0;
+
+    if (industryRequirements && industryRequirements.industryTerms.length > 0) {
+        industryRequirements.industryTerms.forEach(term => {
+            if (resumeLower.includes(term.toLowerCase())) {
+                termsFound++;
+            }
+        });
+        industryTermScore = (termsFound / industryRequirements.industryTerms.length) * 100;
+    } else {
+        industryTermScore = 50;
+    }
+
+    // Calculate weighted final score
+    const weights = {
+        keyword: 0.15,
+        section: 0.15,
+        skills: 0.25,
+        technical: 0.15,
+        tools: 0.10,
+        actionVerbs: 0.10,
+        metrics: 0.10,
+        certifications: 0.05,
+        industryTerms: 0.05
+    };
+
+    const finalScore =
+        (keywordMatchScore * weights.keyword) +
+        (sectionScore * weights.section) +
+        (skillMatchScore * weights.skills) +
+        (technicalSkillScore * weights.technical) +
+        (toolScore * weights.tools) +
+        (actionVerbScore * weights.actionVerbs) +
+        (metricsScore * weights.metrics) +
+        (certScore * weights.certifications) +
+        (industryTermScore * weights.industryTerms);
+
+    return {
+        score: Math.round(Math.min(Math.max(finalScore, 0), 100)),
+        breakdown: {
+            keywordMatch: Math.round(keywordMatchScore),
+            sectionCompletion: Math.round(sectionScore),
+            skillsMatch: Math.round(skillMatchScore),
+            technicalSkills: Math.round(technicalSkillScore),
+            toolsAndTech: Math.round(toolScore),
+            actionVerbs: Math.round(actionVerbScore),
+            quantifiableMetrics: Math.round(metricsScore),
+            certifications: Math.round(certScore),
+            industryTerminology: Math.round(industryTermScore)
+        },
+        details: {
+            matchedKeywords: matchedCount,
+            totalKeywords: jobWords.length,
+            matchedSkills: matchedSkills?.length || 0,
+            missingSkills: keywordGaps?.missing?.length || 0,
+            technicalSkillsFound: technicalSkillsFound,
+            toolsFound: toolsFound,
+            actionVerbsFound: actionVerbsFound,
+            metricsFound: numbersFound,
+            certificationsFound: certsFound,
+            industryTermsFound: termsFound
+        },
+        industryInsights: industryRequirements ? {
+            requiredTechnicalSkills: industryRequirements.technicalSkills,
+            requiredTools: industryRequirements.tools,
+            recommendedActionVerbs: industryRequirements.actionVerbs,
+            relevantCertifications: industryRequirements.certifications
+        } : null
+    };
+};
+
+/**
  * Extract matched skills between resume and JD using AI
  */
 export const extractMatchedSkills = async (resumeText, jobDescriptionText) => {

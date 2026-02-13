@@ -11,6 +11,7 @@ export default function JDMatcher({ onBack }) {
   const { getToken } = useAuth();
   const [file, setFile] = useState(null);
   const [jobDescription, setJobDescription] = useState("");
+  const [jobRoleInput, setJobRoleInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState("");
@@ -55,6 +56,7 @@ export default function JDMatcher({ onBack }) {
       const formData = new FormData();
       formData.append("resume", file);
       formData.append("jobDescription", jobDescription);
+      formData.append("jobRole", jobRoleInput);
 
       const response = await axios.post(
         "/api/resume/analyze-with-jd",
@@ -122,25 +124,51 @@ export default function JDMatcher({ onBack }) {
           {analysis.aiRecommendations && (
             <div className="bg-white rounded-lg shadow-md p-6 mt-6">
               <h3 className="text-2xl font-semibold mb-4">
-                AI-Generated Targeted Improvements
+                AI-Generated JD Match Improvements
               </h3>
               <div className="space-y-4">
-                {analysis.aiRecommendations.improvements?.map((imp, i) => (
-                  <div
-                    key={i}
-                    className="border border-gray-200 rounded-lg p-4"
-                  >
-                    <p className="mb-2">
-                      <strong>Current:</strong> {imp.original}
-                    </p>
-                    <p className="mb-2">
-                      <strong>Suggested:</strong> {imp.improved}
-                    </p>
-                    <p>
-                      <strong>Impact:</strong> {imp.reason}
-                    </p>
-                  </div>
-                ))}
+                {analysis.aiRecommendations.improvements?.map(
+                  (suggestion, i) => (
+                    <div
+                      key={i}
+                      className="border border-gray-200 rounded-lg p-4 bg-gradient-to-r from-blue-50 to-purple-50"
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded font-semibold">
+                          {suggestion.type}
+                        </span> */}
+                        <div className="flex-1">
+                          <p className="mb-2">
+                            <strong className="text-gray-800">Current:</strong>{" "}
+                            <span className="text-gray-600">
+                              {suggestion.original}
+                            </span>
+                          </p>
+                          <p className="mb-2">
+                            <strong className="text-green-800">Revised:</strong>{" "}
+                            <span className="text-green-700">
+                              {suggestion.improved}
+                            </span>
+                          </p>
+                          <p className="mb-2">
+                            <strong className="text-blue-800">Why:</strong>{" "}
+                            <span className="text-blue-600">
+                              {suggestion.reason}
+                            </span>
+                          </p>
+                          {/* <p className="text-sm">
+                            <strong className="text-purple-800">
+                              JD Alignment:
+                            </strong>{" "}
+                            <span className="text-purple-600">
+                              {suggestion.jdAlignment}
+                            </span>
+                          </p> */}
+                        </div>
+                      </div>
+                    </div>
+                  ),
+                )}
               </div>
             </div>
           )}
@@ -210,10 +238,24 @@ export default function JDMatcher({ onBack }) {
             />
           </div>
 
+          {/* Job Role */}
+          <div>
+            <label className="label">Job Role *</label>
+            <input
+              type="text"
+              value={jobRoleInput}
+              onChange={(e) => setJobRoleInput(e.target.value)}
+              placeholder="Enter the job role (e.g., Software Engineer)"
+              className="input-field"
+            />
+          </div>
+
           <button
             type="submit"
             className="btn btn-primary bg-gray-500 hover:bg-gray-600 w-full disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={!file || !jobDescription.trim() || loading}
+            disabled={
+              !file || !jobDescription.trim() || !jobRoleInput.trim() || loading
+            }
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">

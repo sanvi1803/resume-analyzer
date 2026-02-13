@@ -111,10 +111,47 @@ export default defineSchema({
       atsScore: v.optional(
         v.object({
           score: v.number(),
-          keywordMatch: v.number(),
-          sectionCompletion: v.number(),
-          matchedKeywords: v.string(),
-          totalKeywords: v.number(),
+          // Old format fields (for backward compatibility)
+          keywordMatch: v.optional(v.number()),
+          sectionCompletion: v.optional(v.number()),
+          matchedKeywords: v.optional(v.string()),
+          totalKeywords: v.optional(v.number()),
+          // New format fields
+          breakdown: v.optional(
+            v.object({
+              keywordMatch: v.number(),
+              sectionCompletion: v.number(),
+              skillsMatch: v.number(),
+              technicalSkills: v.number(),
+              toolsAndTech: v.number(),
+              actionVerbs: v.number(),
+              quantifiableMetrics: v.number(),
+              certifications: v.number(),
+              industryTerminology: v.number(),
+            }),
+          ),
+          details: v.optional(
+            v.object({
+              matchedKeywords: v.number(),
+              totalKeywords: v.number(),
+              matchedSkills: v.number(),
+              missingSkills: v.number(),
+              technicalSkillsFound: v.number(),
+              toolsFound: v.number(),
+              actionVerbsFound: v.number(),
+              metricsFound: v.number(),
+              certificationsFound: v.number(),
+              industryTermsFound: v.number(),
+            }),
+          ),
+          industryInsights: v.optional(
+            v.object({
+              requiredTechnicalSkills: v.array(v.string()),
+              requiredTools: v.array(v.string()),
+              recommendedActionVerbs: v.array(v.string()),
+              relevantCertifications: v.array(v.string()),
+            }),
+          ),
         }),
       ),
       matchedSkills: v.optional(v.array(v.string())),
