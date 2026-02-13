@@ -8,7 +8,9 @@ export default function ATSScoreCard({ score }) {
     sectionCompletion: score.sectionCompletion,
   };
   const details = score.details || {
-    matchedKeywords: score.matchedKeywords ? parseInt(score.matchedKeywords) : 0,
+    matchedKeywords: score.matchedKeywords
+      ? parseInt(score.matchedKeywords)
+      : 0,
     totalKeywords: score.totalKeywords || 0,
   };
   const industryInsights = score.industryInsights;
