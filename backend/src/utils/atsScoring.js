@@ -31,15 +31,88 @@ export const calculateATSScore = (resumeText, jobDescriptionText) => {
         score: Math.round(atsScore),
         keywordMatch: Math.round(keywordMatchScore),
         sectionCompletion: sectionScore,
-        matchedKeywords: matchedCount,
+        matchedKeywords: matchedCount.toString(),
         totalKeywords: jobWords.length
     };
 };
 
 /**
- * Extract matched skills between resume and JD
+ * Extract matched skills between resume and JD using AI
  */
-export const extractMatchedSkills = (resumeText, jobDescriptionText) => {
+export const extractMatchedSkills = async (resumeText, jobDescriptionText) => {
+    try {
+        // Only attempt AI extraction if API key is configured
+        if (!process.env.OPENROUTER_API_KEY) {
+            return extractMatchedSkillsStatic(resumeText, jobDescriptionText);
+        }
+
+        const { callOpenRouter } = await import('../services/aiService.js');
+
+        // Extract skills from resume
+        const resumeSystemPrompt = `You are an expert at identifying technical and professional skills from resume text.
+Extract ONLY a JSON array of skills. Do not include explanations.`;
+
+        const resumeUserPrompt = `Extract all technical and professional skills from this resume text:
+
+${resumeText}
+
+Return ONLY a valid JSON array like: ["skill1", "skill2", "skill3"]`;
+
+        // Extract skills from job description
+        const jobSystemPrompt = `You are an expert at identifying technical and professional skills required by job descriptions.
+Extract ONLY a JSON array of required skills. Do not include explanations.`;
+
+        const jobUserPrompt = `Extract all technical and professional skills required by this job description:
+
+${jobDescriptionText}
+
+Return ONLY a valid JSON array like: ["skill1", "skill2", "skill3"]`;
+
+        const resumeSkillsResponse = await callOpenRouter(resumeSystemPrompt, resumeUserPrompt);
+        const jobSkillsResponse = await callOpenRouter(jobSystemPrompt, jobUserPrompt);
+
+        // Parse responses
+        const resumeSkillsText = resumeSkillsResponse.content;
+        const jobSkillsText = jobSkillsResponse.content;
+
+        const jsonRegex = /\[[\s\S]*\]/;
+        const resumeJsonMatch = resumeSkillsText.match(jsonRegex);
+        const jobJsonMatch = jobSkillsText.match(jsonRegex);
+
+        const resumeSkills = resumeJsonMatch ? JSON.parse(resumeJsonMatch[0]) : [];
+        const jobSkills = jobJsonMatch ? JSON.parse(jobJsonMatch[0]) : [];
+
+        // Normalize and deduplicate
+        const normalizedResumeSkills = resumeSkills.map(s => s.toLowerCase().trim());
+        const normalizedJobSkills = jobSkills.map(s => s.toLowerCase().trim());
+
+        // Find matched and missing
+        const matched = [];
+        const missing = [];
+
+        normalizedJobSkills.forEach(skill => {
+            if (normalizedResumeSkills.includes(skill)) {
+                matched.push(skill);
+            } else {
+                missing.push(skill);
+            }
+        });
+
+        // Remove duplicates
+        return {
+            matched: [...new Set(matched)],
+            missing: [...new Set(missing)]
+        };
+    } catch (error) {
+        console.error('Error extracting skills with AI, falling back to static extraction:', error.message);
+        return extractMatchedSkillsStatic(resumeText, jobDescriptionText);
+    }
+};
+
+/**
+ * Static regex-based skill extraction (fallback)
+ */
+const extractMatchedSkillsStatic = (resumeText, jobDescriptionText) => {
     const skillPatterns = [
         /\b(python|javascript|typescript|java|c\+\+|go|rust|ruby|php)\b/gi,
         /\b(react|vue|angular|next\.js|svelte)\b/gi,
@@ -81,15 +154,77 @@ export const findKeywordGaps = (resumeText, jobDescriptionText) => {
     const gaps = jobKeywords.filter(kw => !resumeKeywords.includes(kw));
 
     return {
-        missingKeywords: gaps.slice(0, 10),
-        presentKeywords: jobKeywords.filter(kw => resumeKeywords.includes(kw))
+        missing: gaps.slice(0, 10),
+        present: jobKeywords.filter(kw => resumeKeywords.includes(kw))
     };
 };
 
 /**
- * Generate targeted resume suggestions
+ * Generate targeted resume suggestions using AI
  */
-export const generateTargetedSuggestions = (resumeText, jobDescriptionText) => {
+export const generateTargetedSuggestions = async (resumeText, jobDescriptionText) => {
+    try {
+        // Only attempt AI extraction if API key is configured
+        if (!process.env.OPENROUTER_API_KEY) {
+            return generateTargetedSuggestionsStatic(resumeText, jobDescriptionText);
+        }
+
+        const { callOpenRouter } = await import('../services/aiService.js');
+
+        const systemPrompt = `You are an expert recruiter and resume optimization specialist.
+
+Analyze the resume against the job description and generate targeted suggestions to improve job match. Focus on:
+- Missing skills or keywords from the JD
+- Action verbs and leadership language that should be emphasized
+- Quantifiable metrics and achievements that align with the role
+- Experience positioning and relevance
+- Professional terminology from the JD that should appear in resume
+
+Return ONLY a valid JSON array. Do not include explanations or code blocks.`;
+
+        const userPrompt = `Job Description:
+${jobDescriptionText}
+
+---
+
+Resume:
+${resumeText}
+
+---
+
+Generate targeted suggestions to improve this resume's alignment with the job description. Return ONLY a JSON array with this structure:
+
+[
+  {
+    "type": "skill|verb|metrics|positioning",
+    "suggestion": "specific actionable suggestion",
+    "keyword": "relevant keyword or skill if applicable if it coming out to be null then send empty string instead"
+  }
+]
+
+If no suggestions, return: []`;
+
+        const message = await callOpenRouter(systemPrompt, userPrompt);
+        const response = message.content;
+        // console.log('LLM response for targeted suggestions:', response);
+        try {
+            const jsonMatch = response.match(/\[[\s\S]*\]/);
+            const suggestions = JSON.parse(jsonMatch ? jsonMatch[0] : response);
+            return Array.isArray(suggestions) ? suggestions : [];
+        } catch (error) {
+            console.error('Failed to parse suggestions:', error);
+            return generateTargetedSuggestionsStatic(resumeText, jobDescriptionText);
+        }
+    } catch (error) {
+        console.error('Error generating AI suggestions, falling back to static:', error.message);
+        return generateTargetedSuggestionsStatic(resumeText, jobDescriptionText);
+    }
+};
+
+/**
+ * Static suggestion generation (fallback)
+ */
+const generateTargetedSuggestionsStatic = (resumeText, jobDescriptionText) => {
     const suggestions = [];
 
     // Extract job requirements
@@ -111,7 +246,7 @@ export const generateTargetedSuggestions = (resumeText, jobDescriptionText) => {
     if (jobDescriptionText.toLowerCase().includes('lead') ||
         jobDescriptionText.toLowerCase().includes('team')) {
         if (!resumeText.toLowerCase().includes('led') &&
-            !resumeText.toLowerCase().includes('led')) {
+            !resumeText.toLowerCase().includes('managed')) {
             suggestions.push({
                 type: 'verb',
                 suggestion: 'Emphasize leadership experience with action verbs like "Led", "Managed", "Coordinated"'

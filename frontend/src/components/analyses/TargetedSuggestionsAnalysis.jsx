@@ -13,6 +13,7 @@ export default function TargetedSuggestionsAnalysis({ data = [] }) {
   const skillSuggestions = data.filter((s) => s.type === "skill");
   const verbSuggestions = data.filter((s) => s.type === "verb");
   const metricSuggestions = data.filter((s) => s.type === "metrics");
+  const positioning = data.filter((s) => s.type === "positioning");
 
   return (
     <div className="card">
@@ -74,6 +75,26 @@ export default function TargetedSuggestionsAnalysis({ data = [] }) {
             >
               <span className="inline-block bg-green-600 text-white px-2 py-1 rounded text-xs font-semibold whitespace-nowrap mt-0.5">
                 Metrics
+              </span>
+              <p className="m-0 text-sm text-gray-700 flex-1">
+                {sugg.suggestion}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+      {positioning.length > 0 && (
+        <div className="mb-6">
+          <h4 className="text-xs font-semibold text-purple-600 mb-3 uppercase tracking-wide">
+            Positioning & Impact
+          </h4>
+          {positioning.map((sugg, idx) => (
+            <div
+              key={idx}
+              className="p-3 bg-gray-50 rounded-lg mb-2 border-l-4 border-purple-600 flex items-start gap-2"
+            >
+              <span className="inline-block bg-purple-600 text-white px-2 py-1 rounded text-xs font-semibold whitespace-nowrap mt-0.5">
+                Positioning
               </span>
               <p className="m-0 text-sm text-gray-700 flex-1">
                 {sugg.suggestion}

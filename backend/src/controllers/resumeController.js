@@ -12,7 +12,7 @@ import {
     findKeywordGaps,
     generateTargetedSuggestions
 } from '../utils/atsScoring.js';
-import { extractResumeData, generateImprovements } from '../services/aiService.js';
+import { extractResumeData, generateImprovements, generateJDMatchSuggestions } from '../services/aiService.js';
 import { saveAnalysis, saveResume, getAnalysisHistory as fetchAnalysisHistory, getAnalysisById as fetchAnalysisById, deleteAnalysis as deleteFromConvex } from '../services/convexService.js';
 import fs from 'fs/promises';
 
@@ -108,7 +108,6 @@ const analyzeResume = async (req, res) => {
         });
     }
 };
-
 /**
  * Analyze resume against job description
  */
@@ -131,10 +130,41 @@ const analyzeWithJobDescription = async (req, res) => {
         const resumeText = normalizeResumeText(parsed.text);
         const jobDescription = req.body.jobDescription;
 
+        // RUN ALL AI CALLS IN PARALLEL - This is the key optimization!
+        const [
+            metadata,
+            matchedSkillsResult,
+            targetedSuggestions,
+            jdSuggestions,
+            repeated,
+            impact
+        ] = await Promise.all([
+            extractResumeData(resumeText).catch(() => ({})),
+            extractMatchedSkills(resumeText, jobDescription).catch(err => {
+                console.log('Skill extraction failed:', err.message);
+                return { matched: [], missing: [] };
+            }),
+            generateTargetedSuggestions(resumeText, jobDescription).catch(err => {
+                console.log('Targeted suggestions failed:', err.message);
+                return [];
+            }),
+            generateJDMatchSuggestions(resumeText, jobDescription).catch(err => {
+                console.log('JD match suggestions skipped:', err.message);
+                return null;
+            }),
+            analyzeRepeatedWords(resumeText).catch(err => {
+                console.log('Repeated words analysis failed:', err.message);
+                return [];
+            }),
+            analyzeImpactWords(resumeText).catch(err => {
+                console.log('Impact words analysis failed:', err.message);
+                return { weak: [], strong: [] };
+            })
+        ]);
+
         // Save resume to Convex
         let resumeId;
         try {
-            const metadata = await extractResumeData(resumeText).catch(() => ({}));
             resumeId = await saveResume(
                 req.user.clerkId,
                 req.file.filename,
@@ -147,30 +177,18 @@ const analyzeWithJobDescription = async (req, res) => {
             console.log('Warning: Could not save to Convex:', error.message);
         }
 
-        // Perform ATS analysis
+        // Perform non-AI ATS analysis (fast, synchronous)
         const atsScore = calculateATSScore(resumeText, jobDescription);
-        const matchedSkills = extractMatchedSkills(resumeText, jobDescription);
+        const matchedSkills = matchedSkillsResult.matched;
         const keywordGaps = findKeywordGaps(resumeText, jobDescription);
-        const targetedSuggestions = generateTargetedSuggestions(resumeText, jobDescription);
 
-        // Also include basic resume analysis
+        // Compile basic resume analysis
         const basicAnalysis = {
-            repeated: await analyzeRepeatedWords(resumeText),
-            impact: await analyzeImpactWords(resumeText),
+            repeated,
+            impact,
             brevity: calculateBrevityScore(resumeText),
             skills: extractSkills(resumeText)
         };
-
-        // Optionally call AI for enhanced matching (if API key exists)
-        let aiRecommendations = null;
-        if (process.env.OPENROUTER_API_KEY) {
-            try {
-                const context = `Job Description:\n${jobDescription}`;
-                aiRecommendations = await generateImprovements(resumeText, context);
-            } catch (error) {
-                console.log('AI recommendations skipped:', error.message);
-            }
-        }
 
         // Save analysis to Convex
         try {
@@ -188,8 +206,8 @@ const analyzeWithJobDescription = async (req, res) => {
                     'jd-match',
                     analysisResults,
                     jobDescription,
-                    !!aiRecommendations,
-                    aiRecommendations
+                    !!jdSuggestions,
+                    jdSuggestions ? JSON.stringify(jdSuggestions) : ''
                 );
             }
         } catch (error) {
@@ -207,7 +225,7 @@ const analyzeWithJobDescription = async (req, res) => {
                 keywordGaps,
                 targetedSuggestions,
                 basicAnalysis,
-                aiRecommendations
+                aiRecommendations: jdSuggestions
             }
         });
     } catch (error) {
@@ -218,7 +236,6 @@ const analyzeWithJobDescription = async (req, res) => {
         });
     }
 };
-
 /**
  * Get user's analysis history
  */

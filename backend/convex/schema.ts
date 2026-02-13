@@ -113,7 +113,8 @@ export default defineSchema({
           score: v.number(),
           keywordMatch: v.number(),
           sectionCompletion: v.number(),
-          matchedKeywords: v.array(v.string()),
+          matchedKeywords: v.string(),
+          totalKeywords: v.number(),
         }),
       ),
       matchedSkills: v.optional(v.array(v.string())),
@@ -128,6 +129,7 @@ export default defineSchema({
           v.object({
             type: v.string(), // 'skill', 'verb', 'metric'
             suggestion: v.string(),
+            keyword: v.optional(v.any()),
           }),
         ),
       ),

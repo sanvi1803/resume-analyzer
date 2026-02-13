@@ -118,7 +118,7 @@ export const saveAnalysis = async (
             aiSuggestions,
         });
 
-        // console.log("Analysis saved to Convex:", { userId: convexUserId, resumeId, analysisType });
+        console.log("Analysis saved to Convex:", { result });
         return result;
     } catch (error) {
         console.error("Error saving analysis:", error);

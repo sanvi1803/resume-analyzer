@@ -1,5 +1,10 @@
+import { useEffect } from "react";
+
 export default function KeywordGapsAnalysis({ data = {} }) {
-  const { missingKeywords = [], presentKeywords = [] } = data;
+  const { missing = [], present = [] } = data;
+  useEffect(() => {
+    console.log("Keyword Gaps Analysis Data:", data);
+  }, [data]);
 
   return (
     <div className="card">
@@ -8,19 +13,19 @@ export default function KeywordGapsAnalysis({ data = {} }) {
       <div className="p-3 bg-gray-50 rounded-lg text-center mb-4">
         <div>
           <span className="block text-2xl font-bold text-red-600">
-            {missingKeywords.length}
+            {missing.length}
           </span>
           <span className="block text-xs text-gray-600 mt-1">Missing</span>
         </div>
       </div>
 
-      {missingKeywords.length > 0 && (
+      {missing.length > 0 && (
         <div className="mb-4">
           <p className="text-xs font-semibold text-gray-700 m-0 mb-2">
             Add These Keywords:
           </p>
           <div className="flex flex-wrap gap-2">
-            {missingKeywords.slice(0, 8).map((kw, idx) => (
+            {missing.slice(0, 8).map((kw, idx) => (
               <span
                 key={idx}
                 className="inline-block bg-red-100 text-red-900 px-2.5 py-1 rounded text-xs font-medium"
@@ -28,22 +33,22 @@ export default function KeywordGapsAnalysis({ data = {} }) {
                 {kw}
               </span>
             ))}
-            {missingKeywords.length > 8 && (
+            {missing.length > 8 && (
               <span className="inline-block bg-red-100 text-red-900 px-2.5 py-1 rounded text-xs font-medium">
-                +{missingKeywords.length - 8}
+                +{missing.length - 8}
               </span>
             )}
           </div>
         </div>
       )}
 
-      {presentKeywords.length > 0 && (
+      {present.length > 0 && (
         <div>
           <p className="text-xs font-semibold text-gray-700 m-0 mb-2">
             Already Present:
           </p>
           <div className="flex flex-wrap gap-2">
-            {presentKeywords.slice(0, 4).map((kw, idx) => (
+            {present.slice(0, 4).map((kw, idx) => (
               <span
                 key={idx}
                 className="inline-block bg-green-100 text-green-900 px-2.5 py-1 rounded text-xs font-medium"
@@ -51,9 +56,9 @@ export default function KeywordGapsAnalysis({ data = {} }) {
                 {kw}
               </span>
             ))}
-            {presentKeywords.length > 4 && (
+            {present.length > 4 && (
               <span className="inline-block bg-gray-200 text-gray-700 px-2.5 py-1 rounded text-xs font-medium">
-                +{presentKeywords.length - 4}
+                +{present.length - 4}
               </span>
             )}
           </div>

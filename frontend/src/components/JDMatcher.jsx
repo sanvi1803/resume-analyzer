@@ -64,13 +64,13 @@ export default function JDMatcher({ onBack }) {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       setAnalysis(response.data.analysis);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Analysis failed. Please try again."
+        err.response?.data?.message || "Analysis failed. Please try again.",
       );
       console.error(err);
     } finally {
@@ -90,7 +90,17 @@ export default function JDMatcher({ onBack }) {
         >
           <FiChevronLeft /> Back to Mode Selection
         </button>
-
+        <button
+          onClick={() => {
+            setAnalysis(null);
+            setFile(null);
+            setJobDescription("");
+            setError("");
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium transition-colors"
+        >
+          ↻ Reset and Try Again
+        </button>
         <div>
           <h2 className="text-3xl font-bold mb-6">
             Resume vs Job Description Analysis
