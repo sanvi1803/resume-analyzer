@@ -1,3 +1,39 @@
+import { SuggestionItem } from "../ui";
+
+const SUGGESTION_CONFIG = {
+  skill: { label: "Skills", variant: "blue", title: "Skills to Add" },
+  verb: { label: "Verb", variant: "purple", title: "Action Verbs" },
+  metrics: { label: "Metrics", variant: "green", title: "Metrics & Impact" },
+  positioning: {
+    label: "Positioning",
+    variant: "purple",
+    title: "Positioning & Impact",
+  },
+};
+
+function SuggestionGroup({ suggestions, type }) {
+  if (!suggestions || suggestions.length === 0) return null;
+  const config = SUGGESTION_CONFIG[type];
+
+  return (
+    <div className="mb-6">
+      <h4
+        className={`text-xs font-semibold text-${config.variant}-600 mb-3 uppercase tracking-wide`}
+      >
+        {config.title}
+      </h4>
+      {suggestions.map((sugg, idx) => (
+        <SuggestionItem
+          key={idx}
+          label={config.label}
+          suggestion={sugg.suggestion}
+          variant={config.variant}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function TargetedSuggestionsAnalysis({ data = [] }) {
   if (!data || data.length === 0) {
     return (
@@ -10,99 +46,21 @@ export default function TargetedSuggestionsAnalysis({ data = [] }) {
     );
   }
 
-  const skillSuggestions = data.filter((s) => s.type === "skill");
-  const verbSuggestions = data.filter((s) => s.type === "verb");
-  const metricSuggestions = data.filter((s) => s.type === "metrics");
-  const positioning = data.filter((s) => s.type === "positioning");
+  const grouped = {
+    skill: data.filter((s) => s.type === "skill"),
+    verb: data.filter((s) => s.type === "verb"),
+    metrics: data.filter((s) => s.type === "metrics"),
+    positioning: data.filter((s) => s.type === "positioning"),
+  };
 
   return (
     <div className="card">
       <h3 className="text-xl font-semibold mb-4">
         Targeted Improvement Suggestions
       </h3>
-
-      {skillSuggestions.length > 0 && (
-        <div className="mb-6">
-          <h4 className="text-xs font-semibold text-blue-600 mb-3 uppercase tracking-wide">
-            Skills to Add
-          </h4>
-          {skillSuggestions.map((sugg, idx) => (
-            <div
-              key={idx}
-              className="p-3 bg-gray-50 rounded-lg mb-2 border-l-4 border-blue-600 flex items-start gap-2"
-            >
-              <span className="inline-block bg-blue-600 text-white px-2 py-1 rounded text-xs font-semibold whitespace-nowrap mt-0.5">
-                Skills
-              </span>
-              <p className="m-0 text-sm text-gray-700 flex-1">
-                {sugg.suggestion}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {verbSuggestions.length > 0 && (
-        <div className="mb-6">
-          <h4 className="text-xs font-semibold text-purple-600 mb-3 uppercase tracking-wide">
-            Action Verbs
-          </h4>
-          {verbSuggestions.map((sugg, idx) => (
-            <div
-              key={idx}
-              className="p-3 bg-gray-50 rounded-lg mb-2 border-l-4 border-purple-600 flex items-start gap-2"
-            >
-              <span className="inline-block bg-purple-600 text-white px-2 py-1 rounded text-xs font-semibold whitespace-nowrap mt-0.5">
-                Verb
-              </span>
-              <p className="m-0 text-sm text-gray-700 flex-1">
-                {sugg.suggestion}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {metricSuggestions.length > 0 && (
-        <div className="mb-6">
-          <h4 className="text-xs font-semibold text-green-600 mb-3 uppercase tracking-wide">
-            Metrics & Impact
-          </h4>
-          {metricSuggestions.map((sugg, idx) => (
-            <div
-              key={idx}
-              className="p-3 bg-gray-50 rounded-lg mb-2 border-l-4 border-green-600 flex items-start gap-2"
-            >
-              <span className="inline-block bg-green-600 text-white px-2 py-1 rounded text-xs font-semibold whitespace-nowrap mt-0.5">
-                Metrics
-              </span>
-              <p className="m-0 text-sm text-gray-700 flex-1">
-                {sugg.suggestion}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
-      {positioning.length > 0 && (
-        <div className="mb-6">
-          <h4 className="text-xs font-semibold text-purple-600 mb-3 uppercase tracking-wide">
-            Positioning & Impact
-          </h4>
-          {positioning.map((sugg, idx) => (
-            <div
-              key={idx}
-              className="p-3 bg-gray-50 rounded-lg mb-2 border-l-4 border-purple-600 flex items-start gap-2"
-            >
-              <span className="inline-block bg-purple-600 text-white px-2 py-1 rounded text-xs font-semibold whitespace-nowrap mt-0.5">
-                Positioning
-              </span>
-              <p className="m-0 text-sm text-gray-700 flex-1">
-                {sugg.suggestion}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
+      {Object.entries(grouped).map(([type, suggestions]) => (
+        <SuggestionGroup key={type} suggestions={suggestions} type={type} />
+      ))}
     </div>
   );
 }

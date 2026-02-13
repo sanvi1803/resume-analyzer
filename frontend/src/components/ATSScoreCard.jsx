@@ -1,8 +1,117 @@
+import { BadgeList } from "./ui";
+
+// Breakdown item component
+function BreakdownItem({ label, value, variant }) {
+  const bgClasses = {
+    blue: "bg-blue-50",
+    green: "bg-green-50",
+    purple: "bg-purple-50",
+    indigo: "bg-indigo-50",
+    cyan: "bg-cyan-50",
+    amber: "bg-amber-50",
+    orange: "bg-orange-50",
+    pink: "bg-pink-50",
+    teal: "bg-teal-50",
+  };
+  const textClasses = {
+    blue: "text-blue-600",
+    green: "text-green-600",
+    purple: "text-purple-600",
+    indigo: "text-indigo-600",
+    cyan: "text-cyan-600",
+    amber: "text-amber-600",
+    orange: "text-orange-600",
+    pink: "text-pink-600",
+    teal: "text-teal-600",
+  };
+
+  return (
+    <div
+      className={`flex justify-between items-center p-3 ${bgClasses[variant]} rounded-lg`}
+    >
+      <span className="text-gray-700 text-sm">{label}:</span>
+      <strong className={textClasses[variant]}>{value}%</strong>
+    </div>
+  );
+}
+
+// Stat item component
+function StatItem({ value, label, variant }) {
+  const textClasses = {
+    green: "text-green-600",
+    red: "text-red-600",
+    blue: "text-blue-600",
+    purple: "text-purple-600",
+    indigo: "text-indigo-600",
+    pink: "text-pink-600",
+  };
+
+  return (
+    <div className="p-3 bg-gray-50 rounded-lg text-center">
+      <div className={`text-2xl font-bold ${textClasses[variant]}`}>
+        {value}
+      </div>
+      <div className="text-xs text-gray-600">{label}</div>
+    </div>
+  );
+}
+
+// Industry insight section component
+function InsightSection({ title, items, variant }) {
+  if (!items?.length) return null;
+
+  const bgClasses = {
+    blue: "bg-blue-50",
+    purple: "bg-purple-50",
+    green: "bg-green-50",
+    amber: "bg-amber-50",
+  };
+  const titleClasses = {
+    blue: "text-blue-900",
+    purple: "text-purple-900",
+    green: "text-green-900",
+    amber: "text-amber-900",
+  };
+
+  return (
+    <div className={`p-3 ${bgClasses[variant]} rounded-lg`}>
+      <div className={`font-semibold text-sm ${titleClasses[variant]} mb-2`}>
+        {title}:
+      </div>
+      <BadgeList items={items} variant={variant} maxItems={null} />
+    </div>
+  );
+}
+
+const BREAKDOWN_CONFIG = [
+  { key: "keywordMatch", label: "Keyword Match", variant: "blue" },
+  { key: "sectionCompletion", label: "Section Completion", variant: "green" },
+  { key: "skillsMatch", label: "Skills Match", variant: "purple" },
+  { key: "technicalSkills", label: "Technical Skills", variant: "indigo" },
+  { key: "toolsAndTech", label: "Tools & Tech", variant: "cyan" },
+  { key: "actionVerbs", label: "Action Verbs", variant: "amber" },
+  {
+    key: "quantifiableMetrics",
+    label: "Quantifiable Metrics",
+    variant: "orange",
+  },
+  { key: "certifications", label: "Certifications", variant: "pink" },
+  { key: "industryTerminology", label: "Industry Terms", variant: "teal" },
+];
+
+const DETAILS_CONFIG = [
+  { key: "matchedSkills", label: "Matched Skills", variant: "green" },
+  { key: "missingSkills", label: "Missing Skills", variant: "red" },
+  { key: "actionVerbsFound", label: "Action Verbs", variant: "blue" },
+  { key: "metricsFound", label: "Metrics Found", variant: "purple" },
+  { key: "toolsFound", label: "Tools Found", variant: "indigo" },
+  { key: "certificationsFound", label: "Certifications", variant: "pink" },
+];
+
 export default function ATSScoreCard({ score }) {
   if (!score) return null;
 
   const percentage = score.score;
-  // Support both new format (with breakdown) and old format (top-level fields)
   const breakdown = score.breakdown || {
     keywordMatch: score.keywordMatch,
     sectionCompletion: score.sectionCompletion,
@@ -66,7 +175,7 @@ export default function ATSScoreCard({ score }) {
             <div
               className={`h-full transition-all duration-300 ${barColor}`}
               style={{ width: `${percentage}%` }}
-            ></div>
+            />
           </div>
           <p className="text-sm text-gray-600">
             {percentage >= 80
@@ -82,79 +191,15 @@ export default function ATSScoreCard({ score }) {
       <div className="mt-6">
         <h4 className="text-lg font-semibold mb-3">Score Breakdown</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {breakdown.keywordMatch !== undefined && (
-            <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-              <span className="text-gray-700 text-sm">Keyword Match:</span>
-              <strong className="text-blue-600">
-                {breakdown.keywordMatch}%
-              </strong>
-            </div>
-          )}
-          {breakdown.sectionCompletion !== undefined && (
-            <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-              <span className="text-gray-700 text-sm">Section Completion:</span>
-              <strong className="text-green-600">
-                {breakdown.sectionCompletion}%
-              </strong>
-            </div>
-          )}
-          {breakdown.skillsMatch !== undefined && (
-            <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-              <span className="text-gray-700 text-sm">Skills Match:</span>
-              <strong className="text-purple-600">
-                {breakdown.skillsMatch}%
-              </strong>
-            </div>
-          )}
-          {breakdown.technicalSkills !== undefined && (
-            <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-lg">
-              <span className="text-gray-700 text-sm">Technical Skills:</span>
-              <strong className="text-indigo-600">
-                {breakdown.technicalSkills}%
-              </strong>
-            </div>
-          )}
-          {breakdown.toolsAndTech !== undefined && (
-            <div className="flex justify-between items-center p-3 bg-cyan-50 rounded-lg">
-              <span className="text-gray-700 text-sm">Tools & Tech:</span>
-              <strong className="text-cyan-600">
-                {breakdown.toolsAndTech}%
-              </strong>
-            </div>
-          )}
-          {breakdown.actionVerbs !== undefined && (
-            <div className="flex justify-between items-center p-3 bg-amber-50 rounded-lg">
-              <span className="text-gray-700 text-sm">Action Verbs:</span>
-              <strong className="text-amber-600">
-                {breakdown.actionVerbs}%
-              </strong>
-            </div>
-          )}
-          {breakdown.quantifiableMetrics !== undefined && (
-            <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-              <span className="text-gray-700 text-sm">
-                Quantifiable Metrics:
-              </span>
-              <strong className="text-orange-600">
-                {breakdown.quantifiableMetrics}%
-              </strong>
-            </div>
-          )}
-          {breakdown.certifications !== undefined && (
-            <div className="flex justify-between items-center p-3 bg-pink-50 rounded-lg">
-              <span className="text-gray-700 text-sm">Certifications:</span>
-              <strong className="text-pink-600">
-                {breakdown.certifications}%
-              </strong>
-            </div>
-          )}
-          {breakdown.industryTerminology !== undefined && (
-            <div className="flex justify-between items-center p-3 bg-teal-50 rounded-lg">
-              <span className="text-gray-700 text-sm">Industry Terms:</span>
-              <strong className="text-teal-600">
-                {breakdown.industryTerminology}%
-              </strong>
-            </div>
+          {BREAKDOWN_CONFIG.map(({ key, label, variant }) =>
+            breakdown[key] !== undefined ? (
+              <BreakdownItem
+                key={key}
+                label={label}
+                value={breakdown[key]}
+                variant={variant}
+              />
+            ) : null,
           )}
         </div>
       </div>
@@ -164,53 +209,15 @@ export default function ATSScoreCard({ score }) {
         <div className="mt-6">
           <h4 className="text-lg font-semibold mb-3">Detailed Analysis</h4>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {details.matchedSkills !== undefined && (
-              <div className="p-3 bg-gray-50 rounded-lg text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {details.matchedSkills}
-                </div>
-                <div className="text-xs text-gray-600">Matched Skills</div>
-              </div>
-            )}
-            {details.missingSkills !== undefined && (
-              <div className="p-3 bg-gray-50 rounded-lg text-center">
-                <div className="text-2xl font-bold text-red-600">
-                  {details.missingSkills}
-                </div>
-                <div className="text-xs text-gray-600">Missing Skills</div>
-              </div>
-            )}
-            {details.actionVerbsFound !== undefined && (
-              <div className="p-3 bg-gray-50 rounded-lg text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {details.actionVerbsFound}
-                </div>
-                <div className="text-xs text-gray-600">Action Verbs</div>
-              </div>
-            )}
-            {details.metricsFound !== undefined && (
-              <div className="p-3 bg-gray-50 rounded-lg text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {details.metricsFound}
-                </div>
-                <div className="text-xs text-gray-600">Metrics Found</div>
-              </div>
-            )}
-            {details.toolsFound !== undefined && (
-              <div className="p-3 bg-gray-50 rounded-lg text-center">
-                <div className="text-2xl font-bold text-indigo-600">
-                  {details.toolsFound}
-                </div>
-                <div className="text-xs text-gray-600">Tools Found</div>
-              </div>
-            )}
-            {details.certificationsFound !== undefined && (
-              <div className="p-3 bg-gray-50 rounded-lg text-center">
-                <div className="text-2xl font-bold text-pink-600">
-                  {details.certificationsFound}
-                </div>
-                <div className="text-xs text-gray-600">Certifications</div>
-              </div>
+            {DETAILS_CONFIG.map(({ key, label, variant }) =>
+              details[key] !== undefined ? (
+                <StatItem
+                  key={key}
+                  value={details[key]}
+                  label={label}
+                  variant={variant}
+                />
+              ) : null,
             )}
           </div>
         </div>
@@ -221,76 +228,26 @@ export default function ATSScoreCard({ score }) {
         <div className="mt-6">
           <h4 className="text-lg font-semibold mb-3">Industry Insights</h4>
           <div className="space-y-3">
-            {industryInsights.requiredTechnicalSkills?.length > 0 && (
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <div className="font-semibold text-sm text-blue-900 mb-2">
-                  Required Technical Skills:
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {industryInsights.requiredTechnicalSkills.map(
-                    (skill, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded"
-                      >
-                        {skill}
-                      </span>
-                    ),
-                  )}
-                </div>
-              </div>
-            )}
-            {industryInsights.requiredTools?.length > 0 && (
-              <div className="p-3 bg-purple-50 rounded-lg">
-                <div className="font-semibold text-sm text-purple-900 mb-2">
-                  Required Tools:
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {industryInsights.requiredTools.map((tool, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded"
-                    >
-                      {tool}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {industryInsights.recommendedActionVerbs?.length > 0 && (
-              <div className="p-3 bg-green-50 rounded-lg">
-                <div className="font-semibold text-sm text-green-900 mb-2">
-                  Recommended Action Verbs:
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {industryInsights.recommendedActionVerbs.map((verb, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded"
-                    >
-                      {verb}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {industryInsights.relevantCertifications?.length > 0 && (
-              <div className="p-3 bg-amber-50 rounded-lg">
-                <div className="font-semibold text-sm text-amber-900 mb-2">
-                  Relevant Certifications:
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {industryInsights.relevantCertifications.map((cert, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded"
-                    >
-                      {cert}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+            <InsightSection
+              title="Required Technical Skills"
+              items={industryInsights.requiredTechnicalSkills}
+              variant="blue"
+            />
+            <InsightSection
+              title="Required Tools"
+              items={industryInsights.requiredTools}
+              variant="purple"
+            />
+            <InsightSection
+              title="Recommended Action Verbs"
+              items={industryInsights.recommendedActionVerbs}
+              variant="green"
+            />
+            <InsightSection
+              title="Relevant Certifications"
+              items={industryInsights.relevantCertifications}
+              variant="amber"
+            />
           </div>
         </div>
       )}
