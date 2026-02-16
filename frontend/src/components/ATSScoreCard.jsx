@@ -158,7 +158,7 @@ export default function ATSScoreCard({ score }) {
             style={{ backgroundColor: bgColor }}
           >
             <div className="text-center">
-              <div className="text-4xl font-bold" style={{ color: scoreColor }}>
+              <div className="text-3xl font-bold" style={{ color: scoreColor }}>
                 {percentage}%
               </div>
               <div

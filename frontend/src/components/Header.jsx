@@ -7,7 +7,7 @@ export default function Header() {
   const { isLoading, isAuthenticated } = useConvexAuth();
 
   return (
-    <header className="bg-gradient-to-r from-gray-700 to-gray-900 text-white py-5 mb-8 shadow-lg">
+    <header className="bg-linear-to-r from-gray-700 to-gray-900 text-white py-5 mb-8 shadow-lg">
       <div className="max-w-6xl mx-auto px-3 flex flex-col md:flex-row items-center justify-between gap-5 flex-wrap">
         <div className="flex items-center gap-3">
           <Link to="/" className="text-2xl font-bold">
@@ -15,7 +15,7 @@ export default function Header() {
           </Link>
           <h1 className="text-4xl font-bold">Resume Analyzer</h1>
         </div>
-        <p className="text-base opacity-90 flex-grow text-center md:text-left mt-2">
+        <p className="text-base opacity-90 grow text-center md:text-left mt-2">
           AI-Powered Resume Improvement & ATS Matching
         </p>
 

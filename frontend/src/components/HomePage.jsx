@@ -20,7 +20,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-slate-50">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-slate-50">
       <Header />
 
       {/* Hero Section */}
@@ -28,7 +28,7 @@ export default function HomePage() {
         <div className="text-center mb-20 animate-fade-in">
           <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
             Welcome to{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-700 to-gray-900">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-gray-700 to-gray-900">
               Resume Analyzer
             </span>
           </h2>
@@ -39,7 +39,7 @@ export default function HomePage() {
           <SignInButton mode="modal">
             <button
               onClick={() => setTimeout(() => navigate("/analyse"), 500)}
-              className="bg-gradient-to-r from-gray-700 to-gray-900 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 text-lg"
+              className="bg-linear-to-r from-gray-700 to-gray-900 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 text-lg"
             >
               Get Started Free
             </button>
@@ -111,7 +111,7 @@ export default function HomePage() {
 
         {/* Statistics Section */}
         <section
-          className="bg-gradient-to-r from-gray-700 to-gray-900 rounded-2xl p-12 mb-20 text-white shadow-xl animate-fade-in"
+          className="bg-linear-to-r from-gray-700 to-gray-900 rounded-2xl p-12 mb-20 text-white shadow-xl animate-fade-in"
           style={{ animationDelay: "0.3s" }}
         >
           <h3 className="text-3xl font-bold text-center mb-12">
@@ -152,7 +152,7 @@ export default function HomePage() {
                 <div className="flex items-center justify-center w-16 h-16 bg-gray-700 text-white rounded-full font-bold text-2xl shadow-lg hover:scale-110 transition-transform duration-300">
                   1
                 </div>
-                <div className="h-20 w-1 bg-gradient-to-b from-gray-700 to-transparent my-2"></div>
+                <div className="h-20 w-1 bg-linear-to-b from-gray-700 to-transparent my-2"></div>
                 <div className="bg-white rounded-lg p-6 shadow-lg border-l-4 border-gray-700 w-full">
                   <h4 className="font-bold text-lg text-gray-900 mb-2">
                     Upload Resume
@@ -173,7 +173,7 @@ export default function HomePage() {
                 <div className="flex items-center justify-center w-16 h-16 bg-gray-600 text-white rounded-full font-bold text-2xl shadow-lg hover:scale-110 transition-transform duration-300">
                   2
                 </div>
-                <div className="h-20 w-1 bg-gradient-to-b from-gray-600 to-transparent my-2"></div>
+                <div className="h-20 w-1 bg-linear-to-b from-gray-600 to-transparent my-2"></div>
                 <div className="bg-white rounded-lg p-6 shadow-lg border-l-4 border-gray-600 w-full">
                   <h4 className="font-bold text-lg text-gray-900 mb-2">
                     Get Analysis
@@ -195,7 +195,7 @@ export default function HomePage() {
                 <div className="flex items-center justify-center w-16 h-16 bg-gray-800 text-white rounded-full font-bold text-2xl shadow-lg hover:scale-110 transition-transform duration-300">
                   3
                 </div>
-                <div className="h-20 w-1 bg-gradient-to-b from-gray-800 to-transparent my-2"></div>
+                <div className="h-20 w-1 bg-linear-to-b from-gray-800 to-transparent my-2"></div>
                 <div className="bg-white rounded-lg p-6 shadow-lg border-l-4 border-gray-800 w-full">
                   <h4 className="font-bold text-lg text-gray-900 mb-2">
                     Improve & Apply
@@ -225,7 +225,7 @@ export default function HomePage() {
           <SignInButton mode="modal">
             <button
               onClick={() => setTimeout(() => navigate("/analyse"), 500)}
-              className="bg-gradient-to-r from-gray-700 to-gray-900 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 text-lg"
+              className="bg-linear-to-r from-gray-700 to-gray-900 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 text-lg"
             >
               Start Free Now
             </button>

@@ -17,7 +17,7 @@ export default function BadgeList({
   items = [],
   variant = "green",
   size = "sm",
-  maxItems = 5,
+  maxItems = 10,
   solid = false,
   rounded = false,
   moreVariant = "gray",

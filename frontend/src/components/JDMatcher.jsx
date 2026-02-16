@@ -131,7 +131,7 @@ export default function JDMatcher({ onBack }) {
                   (suggestion, i) => (
                     <div
                       key={i}
-                      className="border border-gray-200 rounded-lg p-4 bg-gradient-to-r from-blue-50 to-purple-50"
+                      className="border border-gray-200 rounded-lg p-4 bg-linear-to-r from-blue-50 to-purple-50"
                     >
                       <div className="flex items-start gap-3">
                         {/* <span className="px-2 py-1 bg-blue-600 text-white text-xs rounded font-semibold">
@@ -156,14 +156,6 @@ export default function JDMatcher({ onBack }) {
                               {suggestion.reason}
                             </span>
                           </p>
-                          {/* <p className="text-sm">
-                            <strong className="text-purple-800">
-                              JD Alignment:
-                            </strong>{" "}
-                            <span className="text-purple-600">
-                              {suggestion.jdAlignment}
-                            </span>
-                          </p> */}
                         </div>
                       </div>
                     </div>
